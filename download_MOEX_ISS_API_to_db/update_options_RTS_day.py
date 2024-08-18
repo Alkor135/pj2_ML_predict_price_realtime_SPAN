@@ -3,7 +3,7 @@
 После формирования базы удалить строк из БД командой:
 DELETE FROM Options WHERE TRADEDATE > LSTTRADE
 """
-import sys
+# import sys
 from pathlib import Path
 import requests
 from datetime import date, datetime
@@ -25,7 +25,6 @@ def get_info_security(session, security: str):
     """
     security_info = apimoex.find_security_description(session, security)
     df = pd.DataFrame(security_info)  # Полученную информацию по тикеру в DF
-    # df.fillna(value=0, inplace=True)
     name_lst = list(df['name'])
     if 'LSTTRADE' in name_lst:
         row_lst = ['NAME', 'LSTTRADE', 'OPTIONTYPE', 'STRIKE']  # Список необходимых строк из DF
@@ -71,8 +70,6 @@ def get_options_date_results(tradedate: date, shortname: str):
                 # df[["LSTTRADE", "TRADEDATE"]] = df[["LSTTRADE", "TRADEDATE"]].apply(pd.to_datetime)
                 # Оставляем только строки, где дата экспирации опциона больше даты бара фьючерса(исключаем ОИ=0)
                 df = df.loc[df['LSTTRADE'] > tradedate]
-                # # Оставляем только строки, где дата экспирации опциона больше даты бара фьючерса и опц. (исключаем ОИ=0)
-                # df = df.loc[(df['LSTTRADE'] > tradedate) & (df['LSTTRADE'] > df['TRADEDATE'])]
                 df = df.loc[df['NAME'] == shortname]  # Выбор опционов текущего базового актива
                 # Заполняем пропущенные значения в столбце OPENPOSITION значением 0.0
                 df['OPENPOSITION'] = df['OPENPOSITION'].fillna(0.0)
@@ -95,7 +92,8 @@ def add_row_options_table(connection, cursor, df):
     # # Вызываем функцию sys.exit() для остановки выполнения кода
     # sys.exit()
     for row in df.itertuples():  # Перебираем опционы для занесения в БД
-        # print(f'{row.TRADEDATE}, {row.SECID}, {int(row.OPENPOSITION)}, {row.NAME}, {row.LSTTRADE.date()}, {row.OPTIONTYPE}, {row.STRIKE}')
+        # print(f'{row.TRADEDATE}, {row.SECID}, {int(row.OPENPOSITION)}, {row.NAME}, {row.LSTTRADE.date()}, '
+        #       f'{row.OPTIONTYPE}, {row.STRIKE}')
         sqlighter3_RTS_day.add_tradedate_option(
             connection,
             cursor,
@@ -108,8 +106,8 @@ def add_row_options_table(connection, cursor, df):
             row.STRIKE
         )
     print('Опционы за дату записаны в БД.')
-        # # Вызываем функцию sys.exit() для остановки выполнения кода
-        # sys.exit()
+    # Вызываем функцию sys.exit() для остановки выполнения кода
+    # sys.exit()
 
 
 if __name__ == '__main__':  # Точка входа при запуске этого скрипта
@@ -130,10 +128,8 @@ if __name__ == '__main__':  # Точка входа при запуске это
     df = pd.DataFrame()
     for row in df_tradedate.itertuples():  # Перебираем даты для запроса торгуемых опционов на эту дату
         print(f'\nИндекс={row.Index}, TRADEDATE={row.TRADEDATE}, SHORTNAME={row.SHORTNAME}')
-        if not sqlighter3_RTS_day.tradedate_options_exists(connection, cursor, row.TRADEDATE):  # Нет записи с такой датой
+        # Нет записи с такой датой
+        if not sqlighter3_RTS_day.tradedate_options_exists(connection, cursor, row.TRADEDATE):
             df = get_options_date_results(row.TRADEDATE, row.SHORTNAME)  # Получаем DF по опционам от МОЕХ
             # print(df.to_string(max_rows=10, max_cols=20), '\n')
             add_row_options_table(connection, cursor, df)  # Записываем в БД построчно DF по опционам
-
-    # # Удаление опционов где дата торгов больше даты экспирации опционов
-    # sqlighter3_RTS_day.delete_options_bag(connection, cursor)

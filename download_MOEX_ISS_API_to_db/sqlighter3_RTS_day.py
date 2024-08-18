@@ -88,7 +88,10 @@ def get_tradedate_future(connection):  # Используется для пер�
 def get_tradedate_future_update(connection, start_date):
     """ Получение дат из обновленной таблицы Futures, для обновления таблицы Options """
     with connection:
-        return pd.read_sql(f'SELECT TRADEDATE, SHORTNAME FROM Futures WHERE TRADEDATE >= "{start_date}"', connection)
+        return pd.read_sql(
+            f'SELECT TRADEDATE, SHORTNAME FROM Futures WHERE TRADEDATE >= "{start_date}"',
+            connection
+        )
 
 
 def get_tradedate_future_date(connection, cursor, datedraw):

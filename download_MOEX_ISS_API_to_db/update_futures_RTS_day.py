@@ -1,5 +1,5 @@
 """
-Получение исторических данных по фьючерсам RTS с MOEX ISS API и занесение записей в БД
+Получение исторических данных по фьючерсам RTS с MOEX ISS API и занесение записей в БД.
 Загружать от 2015-01-01
 """
 
@@ -20,7 +20,8 @@ def get_info_future(session: Any, security: str):
     Запрашивает у MOEX информацию по инструменту
     :param session: Подключение к MOEX
     :param security: Тикер инструмента
-    :return: Дата последних торгов (если её нет то возвращает дату удаления тикера, если её нет то возвращает 2130.01.01), короткое имя
+    :return: Дата последних торгов (если её нет то возвращает дату удаления тикера,
+    если её нет то возвращает 2130.01.01), короткое имя
     """
     security_info = apimoex.find_security_description(session, security)
     df = pd.DataFrame(security_info)
@@ -70,7 +71,7 @@ def get_future_date_results(tradedate: date, tiker: str):
                     # Создаем новые колонки 'SHORTNAME', 'LSTTRADE' и заполняем
                     df[['SHORTNAME', 'LSTTRADE']] = df.apply(lambda x: get_info_future(session, x['SECID']), axis=1)
                     df["LSTTRADE"] = pd.to_datetime(df["LSTTRADE"]).dt.date
-                    # Оставляем только строки где дата экспирации больше даты бара (исключаем ОИ=0)
+                    # Оставляем только строки, где дата экспирации больше даты бара (исключаем ОИ=0)
                     df = df.loc[df['LSTTRADE'] > tradedate]
                     # Удаление строк с пустыми OPEN, LOW, HIGH, CLOSE
                     df.dropna(subset=['OPEN', 'LOW', 'HIGH', 'CLOSE'], inplace=True)
@@ -87,7 +88,7 @@ def get_future_date_results(tradedate: date, tiker: str):
                                 float(df.loc[0]['HIGH']), float(df.loc[0]['CLOSE']), int(df.loc[0]['VOLUME']),
                                 int(df.loc[0]['OPENPOSITION']), df.loc[0]['SHORTNAME'], df.loc[0]['LSTTRADE'])
                             print('Строка записана в БД', '\n')
-
+            # Увеличиваем дату на один день
             tradedate += timedelta(days=1)
 
 
