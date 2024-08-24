@@ -1,9 +1,9 @@
 """
 Симуляция реал-тайм торговли.
+Простая запись в файл открытия позиций и закрытия
 """
 
 import time
-
 from pathlib import Path
 from datetime import datetime, timedelta, date
 import re
@@ -209,7 +209,7 @@ if __name__ == '__main__':  # Точка входа при запуске это
         print(opt.predict_close, future.last)
         print(opt.predict_high, future.high)
         print(opt.predict_low, future.low)
-        last_datetime_file, last_label_file = read_log_file(file_path)
+        last_datetime_file, last_label_file = read_log_file(file_path)  # Чтение из файла
         print(f'{last_datetime_file=}  {last_label_file=}')
 
         if last_label_file == 'CLOSE':  # Нет открытых позиций
