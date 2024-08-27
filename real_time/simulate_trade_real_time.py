@@ -181,8 +181,9 @@ class Options:
 def read_log_file(file_path):
     with open(file_path, 'r') as f:
         last_line = f.readlines()[-1]
+        last_line_lst = last_line.split(';')
         # print(last_line.split(';')[0])
-    return last_line.split(';')[0], last_line.split(';')[1]
+    return last_line_lst[0], last_line_lst[1], last_line_lst[3]
 
 
 def save_log_file(file_path, today_date, label, predict_close, last, predict_high, high, predict_low, low):
@@ -206,11 +207,16 @@ if __name__ == '__main__':  # Точка входа при запуске это
         current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         future.run()
         opt.run()
-        print(opt.predict_close, future.last)
-        print(opt.predict_high, future.high)
-        print(opt.predict_low, future.low)
-        last_datetime_file, last_label_file = read_log_file(file_path)  # Чтение из файла
-        print(f'{last_datetime_file=}  {last_label_file=}')
+        print(f'predict close={opt.predict_close}, last price={future.last}')
+        print(f'predict high={opt.predict_high}, high={future.high}')
+        print(f'predict low={opt.predict_low}, low={future.low}')
+
+        if Path(file_path).exists():  # Если файл лога трейдов существует
+            last_datetime_file, last_label_file, price = read_log_file(file_path)  # Читаем значения последней строки
+            print(f'{last_label_file=} {last_datetime_file=} {price=} \n')  # Печатаем значения из последней строки
+        else:
+            last_label_file = 'CLOSE'
+            print(f'{last_label_file=}')
 
         if last_label_file == 'CLOSE':  # Нет открытых позиций
             if future.last < opt.predict_low:  # Открываем BUY
