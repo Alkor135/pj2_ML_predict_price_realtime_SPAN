@@ -1,5 +1,6 @@
 import logging  # Выводим лог на консоль и в файл
 from datetime import datetime  # Дата и время
+import sys  # Выход из точки входа
 import time  # Подписка на события по времени
 
 from QuikPy import QuikPy  # Работа с QUIK из Python через LUA скрипты QUIK#
@@ -24,32 +25,43 @@ if __name__ == '__main__':  # Точка входа при запуске это
     # class_code = 'SPBFUT'  # Класс тикера
     # sec_code = 'SiU4'  # Для фьючерсов: <Код тикера><Месяц экспирации: 3-H, 6-M, 9-U, 12-Z><Последняя цифра года>
 
-    # Запрос текущего стакана. Чтобы получать, в QUIK открыть таблицу "Котировки", указать тикер
-    # logger.info(f'Текущий стакан {class_code}.{sec_code}: {qp_provider.get_quote_level2(class_code, sec_code)["data"]}')
+    # # Подписка на обезличенные сделки. Чтобы получать, в QUIK открыть "Таблицу обезличенных сделок", указать тикер
+    # qp_provider.on_all_trade = lambda data: logger.info(data)  # Обработчик получения обезличенной сделки
+    # logger.info(f'Подписка на обезличенные сделки {class_code}.{sec_code}')
+    # sleep_sec = 3  # Кол-во секунд получения обезличенных сделок
+    # logger.info(f'Секунд обезличенных сделок: {sleep_sec}')
+    # time.sleep(sleep_sec)  # Ждем кол-во секунд получения обезличенных сделок
+    # logger.info(f'Отмена подписки на обезличенные сделки')
+    # qp_provider.on_all_trade = qp_provider.default_handler  # Возвращаем обработчик по умолчанию
+    #
+    # # Просмотр изменений состояния соединения терминала QUIK с сервером брокера
+    # qp_provider.on_connected = lambda data: logger.info(data)  # Нажимаем кнопку "Установить соединение" в QUIK
+    # qp_provider.on_disconnected = lambda data: logger.info(data)  # Нажимаем кнопку "Разорвать соединение" в QUIK
 
-    # # Подписка на стакан. Чтобы отмена подписки работала корректно, в QUIK должна быть ЗАКРЫТА таблица "Котировки" тикера
-    # qp_provider.on_quote = lambda data: logger.info(data)  # Обработчик изменения стакана котировок
-    # logger.info(f'Подписка на изменения стакана {class_code}.{sec_code}: {qp_provider.subscribe_level2_quotes(class_code, sec_code)["data"]}')
-    # logger.info(f'Статус подписки: {qp_provider.is_subscribed_level2_quotes(class_code, sec_code)["data"]}')
-    # sleep_sec = 3  # Кол-во секунд получения котировок
-    # logger.info(f'Секунд котировок: {sleep_sec}')
-    # time.sleep(sleep_sec)  # Ждем кол-во секунд получения котировок
-    # logger.info(f'Отмена подписки на изменения стакана: {qp_provider.unsubscribe_level2_quotes(class_code, sec_code)["data"]}')
-    # logger.info(f'Статус подписки: {qp_provider.is_subscribed_level2_quotes(class_code, sec_code)["data"]}')
-    # qp_provider.on_quote = qp_provider.default_handler  # Возвращаем обработчик по умолчанию
+    while True:  # "вечный" цикл
+        is_connected = qp_provider.is_connected()['data']  # Состояние подключения терминала к серверу QUIK
+        if is_connected == 0:  # Если нет подключения терминала QUIK к серверу
+            # Перед выходом закрываем соединение для запросов и поток обработки функций обратного вызова
+            qp_provider.close_connection_and_thread()
+            sys.exit()  # Выходим, дальше не продолжаем
 
-    # Подписка на обезличенные сделки. Чтобы получать, в QUIK открыть "Таблицу обезличенных сделок", указать тикер
-    qp_provider.on_all_trade = lambda data: logger.info(data)  # Обработчик получения обезличенной сделки
-    logger.info(f'Подписка на обезличенные сделки {class_code}.{sec_code}')
-    sleep_sec = 3  # Кол-во секунд получения обезличенных сделок
-    logger.info(f'Секунд обезличенных сделок: {sleep_sec}')
-    time.sleep(sleep_sec)  # Ждем кол-во секунд получения обезличенных сделок
-    logger.info(f'Отмена подписки на обезличенные сделки')
-    qp_provider.on_all_trade = qp_provider.default_handler  # Возвращаем обработчик по умолчанию
+        # print(qp_provider.on_connected)
+        # print(qp_provider.on_disconnected)
+        # qp_provider.on_connected = lambda x: print(x)
+        # qp_provider.on_disconnected = lambda x: print(x)
 
-    # Просмотр изменений состояния соединения терминала QUIK с сервером брокера
-    qp_provider.on_connected = lambda data: logger.info(data)  # Нажимаем кнопку "Установить соединение" в QUIK
-    qp_provider.on_disconnected = lambda data: logger.info(data)  # Нажимаем кнопку "Разорвать соединение" в QUIK
+        # data_mess = qp_provider.on_all_trade  # Обработчик получения обезличенной сделки
+        # print(data_mess)
+
+        # qp_provider.on_all_trade = lambda data: data
+        # print(data)
+
+        # qp_provider.on_all_trade = lambda x: print(x)
+
+        qp_provider.on_all_trade = lambda x: print(x) \
+            if x['data']['seccode'] == 'RIU4' and x['data']['class_code'] == 'SPBFUT' \
+            else ''
 
     # Выход
-    qp_provider.close_connection_and_thread()  # Закрываем соединение для запросов и поток обработки функций обратного вызова
+    # Закрываем соединение для запросов и поток обработки функций обратного вызова
+    qp_provider.close_connection_and_thread()
