@@ -2,11 +2,16 @@ from multiprocessing import Queue
 import threading
 import sys  # Выход из точки входа
 from datetime import datetime
+from pathlib import Path
 
 from QuikPy import QuikPy  # Работа с QUIK из Python через LUA скрипты QUIK#
 
 
 def client():
+    """
+    Функция получает данные от сервера и помещает их в очередь.
+    :return:
+    """
     while True:  # "вечный" цикл
         is_connected = qp_provider.is_connected()['data']  # Состояние подключения терминала к серверу QUIK
         if is_connected == 0:  # Если нет подключения терминала QUIK к серверу
@@ -22,6 +27,10 @@ def client():
 
 
 def parser():
+    """
+    Функция парсит данные из очереди, записывает в файл, выводит на экран
+    :return:
+    """
     while True:
         parse_dic = {}
         parse = queue_stream.get()  # Получаем из очереди данные от клиента
@@ -44,14 +53,28 @@ def parser():
             parse_dic['flag'] = 'sell'
         parse_dic['oi'] = parse['data']['open_interest']
 
+        with open(file_path, 'a') as f:
+            f.write(
+                f'{parse_dic['date_time']};'
+                f'{parse_dic['price']};'
+                f'{parse_dic['quantity']};'
+                f'{parse_dic['flag']};'
+                f'{parse_dic['oi']}\n'
+            )
         print(parse_dic)
 
 
 if __name__ == '__main__':
     # Изменяемые настройки
-    # ticker = 'RIU4'
     class_code = 'SPBFUT'  # Класс тикера
     sec_code = 'RIU4'  # Тикер
+
+    today_datetime = datetime.now().strftime("%Y-%m-%d")  # Текущая дата и время
+    file_path = Path(fr'../{today_datetime}_{sec_code}_ticks.csv')
+    if not Path(file_path).exists():
+        with open(file_path, 'a') as file:
+            file.write(f'date_time;price;quantity;flag;oi\n')
+            print(f'Файл: {file_path} создан')
 
     qp_provider = QuikPy()  # Подключение к локальному запущенному терминалу QUIK по портам по умолчанию
 
