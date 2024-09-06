@@ -10,6 +10,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="\2024-09-06_RIU4_ticks.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value=";" />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="\nn_features_and_target.csv">
           <value>
             <Attribute>
