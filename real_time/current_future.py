@@ -37,5 +37,5 @@ def get_current_sec_id(ticker: str) -> str:
 if __name__ == '__main__':  # Точка входа при запуске этого скрипта
     ticker: str = 'RTS'
 
-    sec_id: str = get_current_sec_id(ticker)
+    sec_id: Any = get_current_sec_id(ticker)
     print(sec_id)
