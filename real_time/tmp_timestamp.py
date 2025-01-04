@@ -24,4 +24,3 @@ print(f'{time_stamp_new=}')
 # Округление timestamp до секунд в большую сторону
 time_stamp_sec = math.ceil(time_stamp_new)
 print(f'{time_stamp_sec=}')
-
