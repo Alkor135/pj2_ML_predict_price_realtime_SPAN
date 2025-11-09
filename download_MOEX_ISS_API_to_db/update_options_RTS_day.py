@@ -114,13 +114,13 @@ if __name__ == '__main__':  # Точка входа при запуске это
     tiker: str = 'RTS'
     path_db: Path = Path(fr'c:\Users\Alkor\gd\data_quote_db\{tiker}_futures_options_day.db')
     # Лучше брать последнюю дату в БД таблицы Options
-    start_date: date = datetime.strptime('2024-07-01', "%Y-%m-%d").date()
+    start_date: date = datetime.strptime('2015-01-01', "%Y-%m-%d").date()
 
     connection: Any = sqlite3.connect(path_db, check_same_thread=True)
     cursor: Any = connection.cursor()
 
     # Получаем в DF данные по фьючерсам из БД
-    df_tradedate: pd = sqlighter3_RTS_day.get_tradedate_future_update(connection, start_date)
+    df_tradedate = sqlighter3_RTS_day.get_tradedate_future_update(connection, start_date)
     df_tradedate.sort_values(by='TRADEDATE')
     # print(df_tradedate.to_string(max_rows=10, max_cols=20), '\n')
     # print(type(df_tradedate.TRADEDATE[0]))

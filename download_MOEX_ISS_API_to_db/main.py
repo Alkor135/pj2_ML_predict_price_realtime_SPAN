@@ -36,7 +36,7 @@ DB_FILE = DB_PATH / f'{TICKER}_futures_options_day.db'
 LOG_FILE = Path('rts_update.log')
 
 # Стартовая дата, если БД пустая (жёстко в коде)
-START_DATE_IF_EMPTY = datetime.strptime('2015-01-01', "%Y-%m-%d").date()
+START_DATE_IF_EMPTY = datetime.strptime('2019-01-01', "%Y-%m-%d").date()
 
 # Повтор запросов к MOEX
 MAX_RETRIES = 3
