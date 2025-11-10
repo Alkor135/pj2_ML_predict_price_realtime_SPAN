@@ -5,10 +5,9 @@
 from pathlib import Path
 import pandas as pd
 import sqlite3
-from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from sklearn.preprocessing import MinMaxScaler
 import numpy as np
-import sys
-import importlib
+from tqdm import tqdm  # <-- добавлено
 
 # Название тикера (фьючерс)
 tiker: str = 'RTS'
@@ -43,12 +42,10 @@ step_strike = 2500
 # Создание пустого DataFrame для хранения результатов
 df_rez = pd.DataFrame()
 
-# Перебор строк DataFrame с фьючерсами
-for row in df_f.itertuples():  # Перебирает построчно DF с фьючерсами
+# === Добавлен tqdm к циклу для отображения прогресса ===
+for row in tqdm(df_f.itertuples(), total=len(df_f), desc="Обработка строк фьючерсов", unit="строка"):
     # Выбор из DF с опционами только опционов на дату фьючерса
-    # print(df_o)
     df = df_o[df_o.TRADEDATE == row.TRADEDATE]
-    # print(df)
 
     # Проверка на пустоту
     if df.empty:
@@ -82,14 +79,14 @@ for row in df_f.itertuples():  # Перебирает построчно DF с �
     merged_df = pd.merge(df_p, df_c, on='STRIKE', how='outer')
     merged_df = pd.merge(merged_df, df_tmp, on='STRIKE', how='outer')
     merged_df = merged_df.infer_objects(copy=False)
-    merged_df = merged_df.fillna(0)  # Заполнение пропущенных значений нулями
+    merged_df = merged_df.fillna(0)
     merged_df[['STRIKE', 'oi_c', 'oi_p']] = merged_df[['STRIKE', 'oi_c', 'oi_p']].astype(int)
 
     # Накопление суммы открытого интереса по call и put
     merged_df['oi_c'] = merged_df['oi_c'].cumsum()
     merged_df['oi_p'] = merged_df.iloc[::-1]['oi_p'].cumsum()[::-1]
 
-    # Получение даты, цен и ближайшего страйка для текущей строки фьючерса
+    # Получение даты, цен и ближайшего страйка
     trade_date = (df_f.loc[df_f['TRADEDATE'] == row.TRADEDATE, 'TRADEDATE'].values[0]).astype('datetime64[D]')
     price_open = df_f.loc[df_f['TRADEDATE'] == row.TRADEDATE, 'OPEN'].values[0]
     price_close = df_f.loc[df_f['TRADEDATE'] == row.TRADEDATE, 'CLOSE'].values[0]
@@ -99,9 +96,11 @@ for row in df_f.itertuples():  # Перебирает построчно DF с �
 
     # Получение подмножества строк вокруг ближайшего страйка
     index_lst = merged_df.index[merged_df['STRIKE'] == nearest_strike].tolist()
+    if not index_lst:
+        continue
     index_nearest = index_lst[0]
     start_index = max(0, index_nearest - 10)
-    end_index = min(len(df), index_nearest + 10 + 1)
+    end_index = min(len(merged_df), index_nearest + 10 + 1)
     subset_df = merged_df.iloc[start_index:end_index]
     subset_df = subset_df.copy()
 
@@ -109,7 +108,7 @@ for row in df_f.itertuples():  # Перебирает построчно DF с �
     subset_df['oi'] = subset_df.apply(
         lambda x: x.oi_p - x.oi_c if x.STRIKE < price_close else x.oi_c - x.oi_p, axis=1)
 
-    # Нормализация значений в диапазоне от 0 до 1
+    # Нормализация значений
     scaler = MinMaxScaler()
     subset_df['oi_norm'] = scaler.fit_transform(subset_df[['oi']])
 
@@ -131,32 +130,29 @@ for row in df_f.itertuples():  # Перебирает построчно DF с �
 
     # Объединение результатов
     df_rez = pd.concat([df_rez, subset_df])
-    # print(df_rez)
 
 # Округление значений
 df_rez.iloc[:, 0:21] = df_rez.iloc[:, 0:21].round(6)
 
-# Добавление колонки с перцентилем разницы между close и open за 20 предыдущих строк
+# Добавление колонки с перцентилем
 df_rez = df_rez.sort_values(by='date')
-# Разница close - open
-df_rez['ret'] = abs(df_rez['close'] - df_rez['open'])
+df_rez['body'] = (df_rez['close'] - df_rez['open'])
 
 def rolling_percentile(series):
-    """ Функция для вычисления перцентиля текущего ret относительно предыдущих 20 """
     result = [np.nan] * len(series)
     for i in range(20, len(series)):
-        window = series.iloc[i-20:i]   # тоже лучше явно .iloc
+        window = series.iloc[i-20:i]
         result[i] = (window < series.iloc[i]).sum() / 20
     return result
 
-df_rez['percentile_20'] = rolling_percentile(df_rez['ret'])
+# df_rez['percentile_20'] = rolling_percentile(df_rez['ret'])
 
-
-# Вывод результата
-print(df_rez.tail(15).to_string(max_rows=6, max_cols=20))
+# Вывод
+# print(df_rez.tail(15).to_string(max_rows=6, max_cols=20))
+print(df_rez.to_string(max_rows=6, max_cols=20))
+print("Количество колонок:", len(df_rez.columns))
 print(df_rez.columns)
-print(df_rez.shape)
+print("Форма DataFrame:", df_rez.shape)
 
-# Сохранение результата в CSV-файл или pkl
-# df_rez.to_csv(fr'features_and_target.csv', index=True, sep=';')
+# Сохранение
 df_rez.to_pickle('features_and_target.pkl')
