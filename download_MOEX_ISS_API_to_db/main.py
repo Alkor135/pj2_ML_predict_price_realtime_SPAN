@@ -540,12 +540,17 @@ def main():
     # Закрываем соединение
     try:
         connection.commit()
+        logger.info("Выполняется VACUUM для оптимизации БД...")
+        cprint_info("Выполняется VACUUM для оптимизации БД...")
+        cursor.execute("VACUUM")
+        logger.info("VACUUM завершён успешно.")
+        cprint_success("VACUUM завершён успешно.")
         connection.close()
         logger.info("Соединение с БД закрыто")
         cprint_success("Готово. Соединение с БД закрыто")
     except Exception as e:
-        logger.error(f"Ошибка при закрытии БД: {e}")
-        cprint_error(f"Ошибка при закрытии БД: {e}")
+        logger.error(f"Ошибка при закрытии БД или выполнении VACUUM: {e}")
+        cprint_error(f"Ошибка при закрытии БД или выполнении VACUUM: {e}")
 
     logger.info("=== END RTS UPDATER ===")
 
