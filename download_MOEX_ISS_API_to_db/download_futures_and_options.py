@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-main.py
+download_futures_and_options.py
 
 Единый скрипт:
 - Создаёт/подключается к БД с таблицами Futures и Options
