@@ -14,6 +14,7 @@ import sqlite3
 from sklearn.preprocessing import MinMaxScaler
 import numpy as np
 from tqdm import tqdm  # <-- добавлено
+import openpyxl
 
 # Название тикера (фьючерс)
 tiker: str = 'RTS'
@@ -160,5 +161,10 @@ print("Количество колонок:", len(df_rez.columns))
 print(df_rez.columns)
 print("Форма DataFrame:", df_rez.shape)
 
-# Сохранение
+# Сохранение в pickle
 df_rez.to_pickle('features_and_target.pkl')
+
+# Сохранение в Excel
+df_rez.to_excel('features_and_target.xlsx', sheet_name='Features', engine='openpyxl')
+
+print("Данные сохранены в 'features_and_target.pkl' и 'features_and_target.xlsx'")
