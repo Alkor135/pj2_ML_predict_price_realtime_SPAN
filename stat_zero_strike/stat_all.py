@@ -37,7 +37,7 @@ for col in columns_to_update:
 # Замена значений в 'close_abc': 0 если < 0, и 1 если >= 0
 df['close_abc'] = (df['close_abc'] >= 0).astype(int)
 
-# Создание новой колонки 'vector_strike' со списком значений из столбцов -2500, 0, 2500
+# Создание новой колонки 'vector' со списком значений из столбцов -2500, 0, 2500, 'close_abc'
 df['vector'] = df[[-2500, 0, 2500, 'close_abc']].values.tolist()
 
 # Создание колонки 'direction' на основе значения 'body'
